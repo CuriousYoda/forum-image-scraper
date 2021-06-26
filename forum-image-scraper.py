@@ -30,6 +30,8 @@ config = configparser.RawConfigParser()
 config_file = open('input.properties', encoding="utf-8")
 config.read_file(config_file)
 
+imgExtentions = ["png","jpeg","jpg","gif"]
+
 # We read the user defined website from the properties file
 if config.get("UserInput", "hostSite"):
     hostSite = config.get("UserInput", "hostSite")
@@ -92,7 +94,7 @@ def appendUrl(urlList, rawUrl):
             continue
         if url.startswith("/"):
             url = '{}{}'.format(hostSite, url)
-        elif urlparse(url):
+        elif urlparse(url).netloc:
             url = '{}{}'.format("http://", url)
         else:
            url = '{}{}'.format(hostSite+"/", url) 
@@ -159,7 +161,7 @@ while untilPage >= page:
                     print ("SKIPPED, TOO SMALL: "+url)
                     deleteFile(f)
                     continue
-                if result.headers['content-type'] and "image" not in result.headers['content-type']:
+                if result.headers['content-type'] and not any(x in result.headers['content-type'] for x in imgExtentions):
                     print ("SKIPPED, PROBABLY NOT A IMAGE: "+url)
                     deleteFile(f)
                     continue
