@@ -8,7 +8,8 @@
 
 ## How to use
 
-- Open the "inputs.properties" file and set proprties. Here are some example property values
+- Download the project as a zip file, unzip and move into the folder
+- Locate the "input.properties" file and set proprties. Here are some example property values
     - hostSite = https://www.petforums.co.uk
     - thread = https://www.petforums.co.uk/threads/cute-pet-photo-contest.1952
     - pageAppender = /page-
