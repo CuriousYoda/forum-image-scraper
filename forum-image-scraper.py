@@ -94,7 +94,7 @@ def appendUrl(urlList, rawUrl):
             continue
         if url.startswith("/"):
             url = '{}{}'.format(hostSite, url)
-        elif urlparse(url).netloc:
+        elif url.find(".") < url.find("/"):
             url = '{}{}'.format("http://", url)
         else:
            url = '{}{}'.format(hostSite+"/", url) 
