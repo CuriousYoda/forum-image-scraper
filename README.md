@@ -9,7 +9,7 @@
 ## How to use
 
 - Download the project as a zip file, unzip and move into the folder (it's around 11MB)
-- Locate the "input.properties" file and set proprties. Here are some example property values
+- Locate the "input.properties" file and set properties. Here are some example property values
     - hostSite = https://www.petforums.co.uk
     - thread = https://www.petforums.co.uk/threads/cute-pet-photo-contest.1952
     - pageAppender = /page-
