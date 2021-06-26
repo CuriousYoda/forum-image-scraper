@@ -8,7 +8,7 @@
 
 ## How to use
 
-- Download the project as a zip file, unzip and move into the folder
+- Download the project as a zip file, unzip and move into the folder (it's around 11MB)
 - Locate the "input.properties" file and set proprties. Here are some example property values
     - hostSite = https://www.petforums.co.uk
     - thread = https://www.petforums.co.uk/threads/cute-pet-photo-contest.1952
@@ -18,6 +18,10 @@
 - Verify "inputs.properties" and save.
 - Double click "forum-image-scraper.exe"
 - If double clicking doesn't work, open a commpand line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there any issues with your property file. 
+- Images will be downloaded to a folder one directory up. Folder structure will be as follows.
+    - SiteName
+        - ThreadName
+            - Page
 
 ## How to develop and package
 - "forum-image-scraper.py" contains the entire script. Pyinstaller is used to generate the "exe" file
