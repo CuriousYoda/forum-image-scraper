@@ -16,7 +16,7 @@
     - endPage = 20
 - Verify "inputs.properties" and save.
 - Double click "forum-image-scraper.exe"
-- If double clicking doesn't work, open a commpand line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there any issues with your property file. 
+- If double clicking doesn't work, open a commpand line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there are any issues with your property file. 
 
 ## How to develop and package
 - "forum-image-scraper.py" contains the entire script. Pyinstaller is used to generate the "exe" file
