@@ -13,24 +13,11 @@ from urllib.parse import unquote
 from urllib.parse import urlparse
 import tldextract
 
-# thread url
-threadUrl = ""
-# host site
-hostSite = ""
-# start page number, set this to 1 to start from beginning
-page = 1 
-# end page number, set this to the lage page of the thread to go until the end
-untilPage = 1; 
-# Page string appender
-pageAppender = "/"
-# Indicate whether to download FB images too. This takes bit more time as we have to extract the direct url from the source.
-downloadFb = True
+imgExtentions = ["png","jpeg","jpg","gif"]
 
 config = configparser.RawConfigParser()
 config_file = open('input.properties', encoding="utf-8")
 config.read_file(config_file)
-
-imgExtentions = ["png","jpeg","jpg","gif"]
 
 # We read the user defined website from the properties file
 if config.get("UserInput", "hostSite"):
@@ -50,16 +37,17 @@ else:
     exit
     
 # We read the other properties
-pageAppender = config.get("UserInput", "pageAppender")
+pageAppenderBefore = config.get("UserInput", "pageAppenderBefore")
+pageAppenderAfter = config.get("UserInput", "pageAppenderAfter")
 page = int(config.get("UserInput", "startPage"))
 untilPage = int(config.get("UserInput", "endPage"))
 smallImageSize = int(config.get("UserInput", "smallImageSize"))
 pageValueMultiply = int(config.get("UserInput", "pageValueMultiply"))
 
-if config.get("UserInput", "downloadFB")== 'True':
-    downloadFb = True
+if config.get("UserInput", "shouldDownloadSocialLinks")== 'True':
+    shouldDownloadSocialLinks = True
 else:
-    downloadFb = False
+    shouldDownloadSocialLinks = False
 
 # We create a separate folder for each website/host
 websiteFolder = "../"+tldextract.extract(hostSite).domain
@@ -87,25 +75,58 @@ def deleteFile(f):
     f.close()
     os.remove(f.name)
 
-# Modify Urls from the raw url list 
-def appendUrl(urlList, rawUrl):
-    for url in rawUrl.split("//"):
-        if(len(url) < 10):
-            continue
-        if url.startswith("/"):
-            url = '{}{}'.format(hostSite, url)
-        elif url.find(".") < url.find("/"):
-            url = '{}{}'.format("http://", url)
-        else:
-           url = '{}{}'.format(hostSite+"/", url) 
-        urlList.append(url)
-        if downloadFb:
-            facebookRegex = "\d{6,9}_\d{15,17}_\d{16,19}_[o|n]\.(jpeg|jpg|bmp|png|gif|tiff)"
-            fbImageFinder = re.compile(facebookRegex)
-            facebookPath = fbImageFinder.search(url)
-            if facebookPath:
-                urlList.append("https://facebook.com/"+ facebookPath.group(0).split("_")[1])
-    return urlList
+# Create links for FB/Insta attached images
+def createSocialMediaUrl(responseText):
+    # Separate regex to find potential Insta photos
+    socialLinks = []
+    instaTags = re.findall("(instagram.min.html#[a-zA-Z]+)+", responseText);
+    for instaTag in instaTags:
+        instaUrl = "https://www.instagram.com/p/"+instaTag.split("#")[-1]
+        socialLinks.append(instaUrl)
+    
+    # Separate regex to find potential FB photos
+    fbTags = re.findall("\d{6,9}_\d{15,17}_\d{16,19}_[o|n]", responseText);
+    for fbTag in fbTags:
+        fbUrl = "https://facebook.com/"+fbTag.split("_")[1]
+        socialLinks.append(fbUrl)
+        
+    return socialLinks
+
+# Generate FB direct image link and download the photo  
+def downloadFBPhoto(url):
+    fbResponse = requests.get(url)
+    soup = BeautifulSoup(fbResponse.text, 'html.parser') 
+    scriptTag =  soup.find('script', type='application/ld+json')
+    if scriptTag:
+        data = json.loads(scriptTag.string)
+        directFBImageLink = data['image']['contentUrl']
+        return requestUrl(directFBImageLink)
+    else:
+        return fbResponse
+        
+# Generate Insta direct image link and download the photo      
+def downloadInstaPhoto(url):
+    instaResponse = requestUrl(url).read()
+    soup = BeautifulSoup(instaResponse, 'html.parser')
+    metaTag =  soup.find('meta', property="og:image")
+    if metaTag:
+        directInstaImageLink = metaTag['content']
+        return requestUrl(directInstaImageLink)
+    else:
+        return instaResponse
+  
+# Modify Urls when Url is not complete. Different forums use different releative path formats. This method needs to be simplified.
+def modifyUrl(url):
+    if url.startswith("//"):
+        return '{}{}'.format("http:", url)
+    if url.startswith("/"):
+        return '{}{}'.format(hostSite, url)
+    elif url.startswith("http"):
+        return url;
+    elif url.find(".") > url.find("/"):
+        return '{}{}'.format(hostSite+"/", url)
+    else:
+        return '{}{}'.format("http://", url)
               
 # We now iterate over pages
 while untilPage >= page:
@@ -117,29 +138,34 @@ while untilPage >= page:
         os.mkdir(pageFolder)
     
     # We download the page content and look for image references in the page
-    response = requests.get(threadUrl+pageAppender+str(page*pageValueMultiply))
+    response = requests.get(threadUrl+pageAppenderBefore+str(page*pageValueMultiply)+pageAppenderAfter)
     soup = BeautifulSoup(response.text, 'html.parser')
     img_tags = soup.find_all('img')
     
-    # We also look for lazy loaded attachments
-    anchorTags = soup.find_all("a", class_="js-lbImage")
-
-    # We remove duplicates
-    urls = []
-    img_tags = list(set(img_tags))
-    anchorTags = list(set(anchorTags))
-    
+    # We also look for lazy loaded attachments and social media links
+    anchorTags = soup.findAll('a', attrs={'href': re.compile("(jpeg|jpg|gif|png|facebook|instagram)")})
+ 
     # We iterate over image and href references and generate a Url list
+    urls = []
     for img in img_tags:
-        urls = appendUrl(urls, img['src'])
+        urls.append(modifyUrl(img['src']))
     for anchor in anchorTags:
-        urls = appendUrl(urls, anchor['href'])    
+        urls.append(modifyUrl(anchor['href']))
+    
+    # We do special processing for FB, Insta images to extract the proper direct link
+    if shouldDownloadSocialLinks:
+       socialLinks = createSocialMediaUrl(response.text)
+       urls  = urls + socialLinks
+        
+    # We remove duplicates
+    urls = list(set(urls))
+    
     print("PAGE PARSED SUCCESSFULLY")
     print("DOWNLOADING IMAGES.....\n")
 
-    # We now iterate over all the Urls to download images. 
+    # We now iterate over all the unique Urls to download images. 
     for url in urls:
-        
+
         # we provide a unique file name so that we don't save the file in our future executions of the script
         filename = hashlib.md5(url.encode('utf-8')).hexdigest()+".jpg"
         completeName = pageFolder+"/"+filename
@@ -149,22 +175,26 @@ while untilPage >= page:
         
         with open(completeName, 'wb') as f:
             try:
-                if "facebook" in url and downloadFb:
-                    fbResponse = requests.get(url)
-                    soup = BeautifulSoup(fbResponse.text, 'html.parser') 
-                    data = json.loads(soup.find('script', type='application/ld+json').string)
-                    result = requestUrl(data['image']['contentUrl'])                    
+                if shouldDownloadSocialLinks:
+                    if "facebook.com" in url:
+                        result = downloadFBPhoto(url)
+                    elif "instagram.com" in url:
+                        result = downloadInstaPhoto(url)
+                    else:
+                        result = requestUrl(url)
                 else:
                     result = requestUrl(url)
-                
-                if result.headers['content-length'] and int(result.headers['content-length']) < smallImageSize:
-                    print ("SKIPPED, TOO SMALL: "+url)
-                    deleteFile(f)
-                    continue
+                    
                 if result.headers['content-type'] and not any(x in result.headers['content-type'] for x in imgExtentions):
                     print ("SKIPPED, PROBABLY NOT A IMAGE: "+url)
                     deleteFile(f)
                     continue
+                    
+                if result.headers['content-length'] and int(result.headers['content-length']) < smallImageSize:
+                    print ("SKIPPED, TOO SMALL: "+url)
+                    deleteFile(f)
+                    continue
+                
                 response = result.read()
                 f.write(response)
                 print("\nSUCCESSFUL: "+url)
