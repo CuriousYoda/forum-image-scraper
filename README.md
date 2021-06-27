@@ -20,7 +20,7 @@
     - https://www.ar15.com/forums/general/Cat-meme-thread-because-why-the-hell-not-/5-2083401/&page=14 , pageAppenderBefore = &page=
 - Verify "inputs.properties" and save.
 - Double click "forum-image-scraper.exe"
-- If double clicking doesn't work, open a commpand line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there are any issues with your property file. 
+- If double clicking doesn't work, open a command line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there are any issues with your property file. 
 - Images will be downloaded to a folder one directory up. Folder structure will be as follows.
     - SiteName
         - ThreadName
