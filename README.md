@@ -4,7 +4,7 @@
 
 ## Features
 - Downloads all image references in a given forum thread. You can define the forum, the thread and required pages in the property file
-- Currently also supports linked FB/Insta images in the thread. Downloading FB/Insta images takes bit more time as we need to perform two calls to get the direct image link. You can opt out from downloading FB image links by setting "shouldDownloadSocialLinks" to False. 
+- Currently also supports linked FB/Insta images in the thread. Downloading FB/Insta images takes bit more time as we need to perform two calls to get the direct image link. You can opt out from downloading FB/Insta image links by setting "shouldDownloadSocialLinks" to False. 
 
 ## How to use
 
