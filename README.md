@@ -16,8 +16,8 @@
     - startPage = 1
     - endPage = 20
 - "pageAppenderBefore" is different from forum to forum. You need to check this by visiting an individual page of the thread via the browser. This is the text between the "thread" url and page number. Few examples are below. 
-    - https://www.petforums.co.uk/threads/cute-pet-photo-contest.1952/page-/2 - , pageAppenderBefore =/page-
-    - https://www.ar15.com/forums/general/Cat-meme-thread-because-why-the-hell-not-/5-2083401/&page=14 , pageAppenderBefore = &page=
+    - https://www.petforums.co.uk/threads/cute-pet-photo-contest.1952/page-/2 - , pageAppenderBefore =  /page-
+    - https://www.ar15.com/forums/general/Cat-meme-thread-because-why-the-hell-not-/5-2083401/&page=14 , pageAppenderBefore = /&page=
 - Verify "inputs.properties" and save.
 - Double click "forum-image-scraper.exe"
 - If double clicking doesn't work, open a command line prompt and run it by typing "forum-image-scraper.exe". This way you will be able to see if there are any issues with your property file. 
