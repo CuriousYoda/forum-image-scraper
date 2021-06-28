@@ -81,7 +81,7 @@ def createSocialMediaUrl(responseText):
     socialLinks = []
     instaTags = re.findall("(instagram.min.html#[a-zA-Z]+)+", responseText);
     for instaTag in instaTags:
-        instaUrl = "https://www.instagram.com/p/"+instaTag.split("#")[-1]
+        instaUrl = "https://www.instagram.com/p/"+instaTag.split("#")[-1]+"/embed/"
         socialLinks.append(instaUrl)
     
     # Separate regex to find potential FB photos
@@ -108,10 +108,9 @@ def downloadFBPhoto(url):
 def downloadInstaPhoto(url):
     instaResponse = requestUrl(url).read()
     soup = BeautifulSoup(instaResponse, 'html.parser')
-    metaTag =  soup.find('meta', property="og:image")
-    if metaTag:
-        directInstaImageLink = metaTag['content']
-        return requestUrl(directInstaImageLink)
+    img_url = soup.find_all('img')[1]['src']
+    if img_url:
+        return requestUrl(img_url)
     else:
         return instaResponse
   
